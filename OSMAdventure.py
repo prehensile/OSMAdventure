@@ -1,86 +1,60 @@
-import OsmApi
 import GeoUtilities
+import OsmApi
+import OSMUtilities
+import math
+import AdventureUtilities
+import AdventureClient
 
 # baker street
 lat = 51.522
 long = -0.157
 
-key_data = "data"
-key_name = "name"
-key_tag = "tag"
-key_lat = "lat"
-key_lon = "lon"
-key_type = "type"
-type_way = u'way'
-type_node = u'node'
-key_id = "id"
+# rushmore road
+#lat = 51.55464
+#long = -0.05068
 
-def item_distance( item, lat, lon ):
-	d = 0
-	data = item[ key_data ]
-	if( key_lat in data ):
-		item_lat = data[ key_lat ]
-		item_lon = data[ key_lon ]
-		d = GeoUtilities.distance( lat, lon, item_lat, item_lon )
-	return( d )
+osm_connector = OsmApi.OsmApi()
 
-def sorted_items_by_distance( items_in, lat, long ):
-	sorted_items = []
-	# shitty sorting
-	for item in items_in:
-		data = item[ key_data ]
-		if( key_lat in data ):
-			d1 = item_distance( item, lat, long )
-			l = len( sorted_items )
-			i = 0
-			hasInserted = False
-			while( i < l ):
-				sorted_item = sorted_items[ i ]
-				d2 = item_distance( sorted_item, lat, long )
-				if( d1 < d2 ):
-					sorted_items.insert( i, item )
-					hasInserted = True
-					break
-				i = i + 1
-			if( hasInserted is False ):
-				sorted_items.append( item )
-	return( sorted_items )
+# get nearby things
+map = []
+dist = .02
+way = None
+i = 0
+while( len( map ) < 10 ):
+	bbox = GeoUtilities.boundingBox( lat, long, dist )
+	map = osm_connector.Map( bbox[ "lonMin" ], bbox[ "latMin" ], bbox[ "lonMax" ], bbox[ "latMax" ] )
+	dist = dist * 1.5
+	i = i + 1 
 
-def getNearestWay( lat, long ):
-	# get nearby things
-	map = []
-	dist = .02
-	way = None
-	i = 0
-	while( len( map ) < 10 ):
-		bbox = GeoUtilities.boundingBox( lat, long, dist )
-		map = OSMConnector.Map( bbox[ "lonMin" ], bbox[ "latMin" ], bbox[ "lonMax" ], bbox[ "latMax" ] )
-		dist = dist * 1.5
-		i = i + 1 
-	
-	sorted_items = sorted_items_by_distance( map, lat, long )
-	
-	# get nearest Way
-	current_way = None
-	for item in sorted_items:
-		data = item[ key_data ]
-		id = data[ key_id ]
-		ways = OSMConnector.NodeWays( id )
+sorted_items = OSMUtilities.sorted_items_by_distance( map, lat, long )
+
+# get nearest Way & Node
+current_way = None
+current_node = None
+for item in sorted_items:
+	id = OSMUtilities.id_for_item( item )
+	if( id ):
+		ways = osm_connector.NodeWays( id )
 		for way in ways:
-			tag = way[ key_tag ]
-			if( key_name in tag ):
+			name = OSMUtilities.name_for_data( way )
+			if( name ):
 				current_way = way
+				current_node = OSMUtilities.data_for_item( item )
 				break
 		if( current_way is not None ):
 			break
-	
-	return( current_way )
+			
+# get node list for current Way
+id_current_node = OSMUtilities.id_for_data( current_node )
+way_nodes = osm_connector.WayGet( current_way[ OSMUtilities.key_id ] )
+nd_current_way = way_nodes[ OSMUtilities.key_nd ]
 
-	
-OSMConnector = OsmApi.OsmApi()
-
-
-if( current_way ):
-	tag = way[ key_tag ]
-	name = tag[ key_name ]
-	print name
+# game loop
+node_in = current_node
+way_in = current_way
+nd_in = nd_current_way
+while( 1 ):
+	node_out, way_out, nd_out = AdventureClient.go_to_node( osm_connector, node_in, way_in, nd_in )
+	node_in = node_out
+	way_in = way_out
+	nd_in = nd_out

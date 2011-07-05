@@ -81,11 +81,13 @@ def go_to_node( osm_connector, node_in, way_in, nd_in ):
 		
 	out += "%s." % desc_ways_out
 	
-	print out
-	input = raw_input(">")
-	
-	if( input in ways_out ):
-		way_out = ways_out[ input ]
-		return( way_out )
+	input = None
+	output = None
+	while( output is None ):
+		print out
+		input = raw_input(">")	
+		if( input in ways_out ):
+			way_out = ways_out[ input ]
+			return( way_out )
 	
 	return None

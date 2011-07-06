@@ -75,9 +75,9 @@ def go_to_node( osm_connector, node_in, way_in  ):
 	out += "You are standing %s.\n" % desc_ways
 	out += desc_ways_out
 	
-	if( DebugUtilities.get_debugmode() ):
+	if( DebugUtilities.get_debugmode()  ):
 		# describe things
-		rel = osm_connector.NodeRelations( id )
+		rel = osm_connector.NodeRelations( node_id )
 		print "relationships: %s" % rel
 	
 	return out, ways_out

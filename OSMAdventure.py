@@ -104,14 +104,15 @@ while( next_node ):
 			elif( command == "logout" ):
 				exit()
 			elif( command == "debug" ):
-				dbm = DebugUtilities.toggle_debugmode
+				dbm = DebugUtilities.toggle_debugmode()
 				if( dbm ):
 					print "Debug mode is ON"
 				else:
 					print "Debug mode is OFF"
-			
-			if( mode_input ):
+				input = False
+			else:
 				print "I don't know how to %s." % command
+				input = False
 
 print "OSMAdventure finished normally"				
 		

@@ -43,18 +43,52 @@ for item in sorted_items:
 				break
 		if( current_way is not None ):
 			break
-			
-# get node list for current Way
-id_current_node = OSMUtilities.id_for_data( current_node )
-way_nodes = osm_connector.WayGet( current_way[ OSMUtilities.key_id ] )
-nd_current_way = way_nodes[ OSMUtilities.key_nd ]
 
 # game loop
-node_in = current_node
-way_in = current_way
-nd_in = nd_current_way
-while( 1 ):
-	node_out, way_out, nd_out = AdventureClient.go_to_node( osm_connector, node_in, way_in, nd_in )
-	node_in = node_out
-	way_in = way_out
-	nd_in = nd_out
+next_node = current_node
+next_way = current_way
+while( next_node ):
+	
+	desc, ways_out = AdventureClient.go_to_node( osm_connector, next_node, next_way )
+	print desc
+	
+	mode_input = True
+	while( mode_input ):
+		input = None
+		while( input is None ):
+			input = raw_input(">")
+		
+		# parse input
+		parts = input.split(" ")
+		command = parts[ 0 ]
+		if( command in ways_out ):
+			# command is a cardinal and we have a way for it
+			next_node, next_way = ways_out[ command ]
+			mode_input = False
+		else:
+			# command is more complex
+			
+			# if the user typed something followed by a cardinal, assume they want to go there
+			if( len(parts) == 2 ):
+				part = parts[1]
+				if( part in ways_out ):
+					# part is a cardinal and we have a way for it
+					next_node, next_way = ways_out[ part ]
+					mode_input = False
+			
+			elif( command == "quit" ):
+				exit()
+			elif( command == "exit" ):
+				exit()
+			elif( command == "bye" ):
+				exit()
+			elif( command == "logout" ):
+				exit()
+			
+			if( mode_input ):
+				print "I don't know how to %s." % command
+
+print "OSMAdventure finished normally"				
+		
+		
+	

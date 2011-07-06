@@ -5,36 +5,7 @@ import math
 import AdventureUtilities
 import AdventureClient
 from sets import Set
-
-
-def get_neighbours( osm_connector, node, way ):
-	
-	result = osm_connector.WayGet( way[ OSMUtilities.key_id ] )
-	nodelist = result[ OSMUtilities.key_nd ]
-	
-	# get ptr to current nd
-	node_id = OSMUtilities.id_for_data( node )
-	ptr_nd = -1
-	i = 0
-	for nd in nodelist:
-		if( nd == node_id ):
-			ptr_nd = i
-			break
-		i = i + 1
-	
-	prev_node = None
-	next_node = None
-	
-	if( ptr_nd < len( nodelist ) -1 ):
-		id_next = nodelist[ ptr_nd + 1 ]
-		next_node = osm_connector.NodeGet( id_next )
-	
-	if( ptr_nd > 0 ):
-		id_prev = nodelist[ ptr_nd - 1 ]
-		prev_node = osm_connector.NodeGet( id_prev )
-		
-	return prev_node, next_node
-	
+from DebugUtilities import DebugUtilities
 
 def go_to_node( osm_connector, node_in, way_in  ):
 	
@@ -47,20 +18,32 @@ def go_to_node( osm_connector, node_in, way_in  ):
 	ways_out = {}
 	way_names = Set([])
 	id_way_in =  OSMUtilities.id_for_data( way_in )
+	scratch_string = ""
 		
 	for nodeway in ways:
 		way_id = OSMUtilities.id_for_data( nodeway )
 		way_name = AdventureUtilities.description_for_way( nodeway )
 		way_names.add( way_name )
 		
-		prev_node, next_node = get_neighbours( osm_connector, node_in, nodeway )
+		prev_node, next_node = AdventureUtilities.get_neighbours( osm_connector, node_in, nodeway )
 		bearing_next = -1;
 		bearing_prev = -1;
 		
+		str_go = ""
+		str_name = way_name
 		if( way_id == id_way_in ):
-			desc_ways_out += "%s runs to the " % AdventureUtilities.description_for_way( nodeway, False, True ).capitalize()
+			str_go = "runs"
+			str_name = AdventureUtilities.description_for_way( nodeway, False, True )
+			str_name = AdventureUtilities.ucfirst( str_name )
+			if( str_name[-1:] == "s" ):
+				str_go = "run"
 		else: 
-			desc_ways_out += "%s goes off to the " % way_name.capitalize()
+			str_go = "goes off"
+			str_name = AdventureUtilities.ucfirst( way_name )
+			if( str_name[-1:] == "s" ):
+				str_go = "go off"
+		
+		desc_ways_out += "%s %s to the " % ( str_name, str_go )
 			
 		if( next_node ):
 			bearing_next = OSMUtilities.node_bearing( node_in, next_node )
@@ -87,12 +70,14 @@ def go_to_node( osm_connector, node_in, way_in  ):
 	# start description output
 	#print "DEBUG"
 	#print "current node: %s" % node_in
-	out = "%s.\n" % ( AdventureUtilities.description_for_way( way_in, True ) )
+	lat, long = OSMUtilities.latlong_for_data( node_in )
+	out = "%s (%2.8f,%2.8f).\n" % ( AdventureUtilities.description_for_way( way_in, True ), lat, long )
 	out += "You are standing %s.\n" % desc_ways
 	out += desc_ways_out
 	
-	# describe things
-	# rel = osm_connector.NodeRelations( id )
-	# print "relationships: %s" % rel
+	if( DebugUtilities.get_debugmode() ):
+		# describe things
+		rel = osm_connector.NodeRelations( id )
+		print "relationships: %s" % rel
 	
 	return out, ways_out

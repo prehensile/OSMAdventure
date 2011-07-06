@@ -4,6 +4,9 @@ import OSMUtilities
 import math
 import AdventureUtilities
 import AdventureClient
+from DebugUtilities import DebugUtilities
+import IPInfoDB
+
 
 # baker street
 lat = 51.522
@@ -12,6 +15,12 @@ long = -0.157
 # rushmore road
 #lat = 51.55464
 #long = -0.05068
+
+# dynamic lat / long
+# ipinfo = IPInfoDB.get_info( "31.64.140.162" )
+# lat = float( ipinfo[8] )
+# long = float( ipinfo[9] )
+# print( ipinfo[6] )
 
 osm_connector = OsmApi.OsmApi()
 
@@ -45,6 +54,16 @@ for item in sorted_items:
 			break
 
 # game loop
+
+def parse_way_out( fragment, ways_out ):
+	out = None
+	if( fragment in AdventureUtilities.verbose_cardinals ):
+		fragment = AdventureUtilities.verbose_cardinals[ fragment ]
+	if( fragment in ways_out ):
+		# part is a cardinal and we have a way for it
+		out = ways_out[ fragment ]
+	return( out )
+
 next_node = current_node
 next_way = current_way
 while( next_node ):
@@ -61,9 +80,9 @@ while( next_node ):
 		# parse input
 		parts = input.split(" ")
 		command = parts[ 0 ]
-		if( command in ways_out ):
-			# command is a cardinal and we have a way for it
-			next_node, next_way = ways_out[ command ]
+		parsed = parse_way_out( command, ways_out )
+		if( parsed ):
+			next_node, next_way = parsed
 			mode_input = False
 		else:
 			# command is more complex
@@ -71,9 +90,9 @@ while( next_node ):
 			# if the user typed something followed by a cardinal, assume they want to go there
 			if( len(parts) == 2 ):
 				part = parts[1]
-				if( part in ways_out ):
-					# part is a cardinal and we have a way for it
-					next_node, next_way = ways_out[ part ]
+				parsed = parse_way_out( part, ways_out )
+				if( parsed ):
+					next_node, next_way = parsed
 					mode_input = False
 			
 			elif( command == "quit" ):
@@ -84,6 +103,12 @@ while( next_node ):
 				exit()
 			elif( command == "logout" ):
 				exit()
+			elif( command == "debug" ):
+				dbm = DebugUtilities.toggle_debugmode
+				if( dbm ):
+					print "Debug mode is ON"
+				else:
+					print "Debug mode is OFF"
 			
 			if( mode_input ):
 				print "I don't know how to %s." % command

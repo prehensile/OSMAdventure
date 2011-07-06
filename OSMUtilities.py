@@ -14,16 +14,19 @@ key_id = "id"
 key_nd = "nd"
 key_highway = "highway"
 
+geod = pyproj.Geod(ellps='clrk66')
+
+def latlong_for_data( data ):
+	lat = data[ key_lat ]
+	lon = data[ key_lon ]
+	return lat, lon
+
 def node_bearing( node1, node2 ):
-	lat1 = node1[ key_lat ]
-	lon1 = node1[ key_lon ]
-	lat2 = node2[ key_lat ]
-	lon2 = node2[ key_lon ]
+	lat1, lon1 = latlong_for_data( node1 )
+	lat2, lon2 = latlong_for_data( node2 )
 	# a = GeoUtilities.haversine_bearing( lon1, lat1, lon2, lat2 )
 	# a = GeoUtilities.williams_bearing( lat1, lon1, lat2, lon2 )
-	g1 = pyproj.Geod(ellps='clrk66')
-	az12,az21,dist = g1.inv( lon1, lat1, lon2, lat2, True )
-	a = az12
+	a = geod.inv( lon1, lat1, lon2, lat2, True )[0]
 	a = (a+math.pi) % (math.pi*2) # normalise heading
 	# print "-->%2.8f" % a
 	# print "--->%2.8f" % math.degrees( a )
@@ -65,10 +68,10 @@ def item_distance( item, lat, lon ):
 	d = 0
 	data = item[ key_data ]
 	if( key_lat in data ):
-		item_lat = data[ key_lat ]
-		item_lon = data[ key_lon ]
+		item_lat, item_lon = latlong_for_data( data )
 		# d = GeoUtilities.distance( lat, lon, item_lat, item_lon )
-		d = GeoUtilities.haversine_distance( lon, lat, item_lon, item_lat )
+		# d = GeoUtilities.haversine_distance( lon, lat, item_lon, item_lat )
+		d = geod.inv( lon, lat, item_lon, item_lat, True )[2]
 	return( d )
 
 def sorted_items_by_distance( items_in, lat, long ):

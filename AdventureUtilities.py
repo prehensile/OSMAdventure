@@ -4,6 +4,7 @@ import random
 import re
 from random import choice
 from DebugUtilities import DebugUtilities
+import os.path
 
 cardinal_n = "n"
 cardinal_ne = "ne"
@@ -129,3 +130,14 @@ def get_neighbours( osm_connector, node, way ):
 		prev_node = osm_connector.NodeGet( id_prev )
 		
 	return prev_node, next_node
+	
+def render_template( template_name ):
+	fn = "templates/%s.txt" % template_name
+	path = os.path.realpath(__file__)
+	path = os.path.dirname( path )
+	path = os.path.join( path, fn )
+	fh = open( path )
+	txt = fh.read()
+	fh.close()
+	print txt
+	return( txt )

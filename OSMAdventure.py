@@ -67,13 +67,12 @@ while( next_node ):
 				if( tlat and tlon ):
 					tlat = float(tlat)
 					tlon = float(tlon)
-					print "You feel your skin prickle and a sense of apprehension, as in the moment before a long-gathering storm breaks. The feeling gathers in intensity until, just at the point you feel like you're ready to scream, it snaps off and you realise that you're not standing *anywhere*. Your mouth, if you could be sure of having one at this point, would be full of the taste of tin."
-					print "A tiny, brisk voice says 'please wait for the next available operator' and muzak begins to play where you imagine the base of your skull would be."
+					AdventureUtilities.render_template( "teleport_in" )
 					next_node, next_way = OSMUtilities.get_nearest_node_to_latlong( osm_connector, tlat, tlon )
 					if( next_node and next_way ):
 						mode_input = False
 					else:
-						print "I couldn't find a suitable landing spot near that location. Sorry!"
+						AdventureUtilities.render_template( "teleport_error" )
 						input = False
 						command = "look"
 			elif( command == "look" ):

@@ -22,39 +22,6 @@ long = -0.157
 # long = float( ipinfo[9] )
 # print( ipinfo[6] )
 
-osm_connector = OsmApi.OsmApi()
-
-# get nearby things
-map = []
-dist = .02
-way = None
-i = 0
-while( len( map ) < 10 ):
-	bbox = GeoUtilities.boundingBox( lat, long, dist )
-	map = osm_connector.Map( bbox[ "lonMin" ], bbox[ "latMin" ], bbox[ "lonMax" ], bbox[ "latMax" ] )
-	dist = dist * 1.5
-	i = i + 1 
-
-sorted_items = OSMUtilities.sorted_items_by_distance( map, lat, long )
-
-# get nearest Way & Node
-current_way = None
-current_node = None
-for item in sorted_items:
-	id = OSMUtilities.id_for_item( item )
-	if( id ):
-		ways = osm_connector.NodeWays( id )
-		for way in ways:
-			name = OSMUtilities.name_for_data( way )
-			if( name ):
-				current_way = way
-				current_node = OSMUtilities.data_for_item( item )
-				break
-		if( current_way is not None ):
-			break
-
-# game loop
-
 def parse_way_out( fragment, ways_out ):
 	out = None
 	if( fragment in AdventureUtilities.verbose_cardinals ):
@@ -64,8 +31,10 @@ def parse_way_out( fragment, ways_out ):
 		out = ways_out[ fragment ]
 	return( out )
 
-next_node = current_node
-next_way = current_way
+osm_connector = OsmApi.OsmApi()
+next_node, next_way = OSMUtilities.get_nearest_node_to_latlong( osm_connector, lat, long )
+
+# game loop
 while( next_node ):
 	
 	desc, ways_out = AdventureClient.go_to_node( osm_connector, next_node, next_way )
@@ -87,14 +56,29 @@ while( next_node ):
 		else:
 			# command is more complex
 			
-			# if the user typed something followed by a cardinal, assume they want to go there
-			if( len(parts) == 2 ):
-				part = parts[1]
-				parsed = parse_way_out( part, ways_out )
-				if( parsed ):
-					next_node, next_way = parsed
-					mode_input = False
-			
+			if( command == "teleport" ):
+				if( len(parts) == 2 ):
+					tlat, tlon = parts[1].split(",")
+				elif( len(parts) == 3 ):
+					tlat = parts[1]
+					tlon = parts[2]
+				print tlat
+				print tlon
+				if( tlat and tlon ):
+					tlat = float(tlat)
+					tlon = float(tlon)
+					print "You feel your skin prickle and a sense of apprehension, as in the moment before a long-gathering storm breaks. The feeling gathers in intensity until, just at the point you feel like you're ready to scream, it snaps off and you realise that you're not standing *anywhere*. Your mouth, if you could be sure of having one at this point, would be full of the taste of tin."
+					print "A tiny, brisk voice says 'please wait for the next available operator' and muzak begins to play where you imagine the base of your skull would be."
+					next_node, next_way = OSMUtilities.get_nearest_node_to_latlong( osm_connector, tlat, tlon )
+					if( next_node and next_way ):
+						mode_input = False
+					else:
+						print "I couldn't find a suitable landing spot near that location. Sorry!"
+						input = False
+						command = "look"
+			elif( command == "look" ):
+				print desc
+				input = False
 			elif( command == "quit" ):
 				exit()
 			elif( command == "exit" ):
@@ -109,7 +93,14 @@ while( next_node ):
 					print "Debug mode is ON"
 				else:
 					print "Debug mode is OFF"
-				input = False
+				input = False	
+			elif( len(parts) == 2 ):
+				# if the user typed anything followed by a cardinal, assume they want to go there
+				part = parts[1]
+				parsed = parse_way_out( part, ways_out )
+				if( parsed ):
+					next_node, next_way = parsed
+					mode_input = False
 			else:
 				print "I don't know how to %s." % command
 				input = False

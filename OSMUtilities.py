@@ -95,3 +95,37 @@ def sorted_items_by_distance( items_in, lat, long ):
 			if( hasInserted is False ):
 				sorted_items.append( item )
 	return( sorted_items )
+
+
+def get_nearest_node_to_latlong( osm_connector, lat, long ):
+
+	# get nearby things
+	map = []
+	dist = .02
+	way = None
+	i = 0
+	while( len( map ) < 10 ):
+		bbox = GeoUtilities.boundingBox( lat, long, dist )
+		map = osm_connector.Map( bbox[ "lonMin" ], bbox[ "latMin" ], bbox[ "lonMax" ], bbox[ "latMax" ] )
+		dist = dist * 1.5
+		i = i + 1 
+	
+	sorted_items = sorted_items_by_distance( map, lat, long )
+	
+	# get nearest Way & Node
+	current_way = None
+	current_node = None
+	for item in sorted_items:
+		id = id_for_item( item )
+		if( id ):
+			ways = osm_connector.NodeWays( id )
+			for way in ways:
+				name = name_for_data( way )
+				if( name ):
+					current_way = way
+					current_node = data_for_item( item )
+					break
+			if( current_way is not None ):
+				break
+	
+	return current_node, current_way

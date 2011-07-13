@@ -6,37 +6,6 @@ from random import choice
 from DebugUtilities import DebugUtilities
 import os.path
 
-cardinal_n = "n"
-cardinal_ne = "ne"
-cardinal_e = "e"
-cardinal_se = "se"
-cardinal_s = "s"
-cardinal_sw = "sw"
-cardinal_w = "w"
-cardinal_nw = "nw"
-
-verbose_cardinal_n = "north"
-verbose_cardinal_ne = "north-east"
-verbose_cardinal_e = "east"
-verbose_cardinal_se = "south-east"
-verbose_cardinal_s = "south"
-verbose_cardinal_sw = "south-west"
-verbose_cardinal_w = "west"
-verbose_cardinal_nw = "north-west"
-
-verbose_cardinals = { 	verbose_cardinal_n: cardinal_n, verbose_cardinal_ne: cardinal_ne,
-						verbose_cardinal_e: cardinal_e, verbose_cardinal_se: cardinal_se,
-						verbose_cardinal_s: cardinal_s, verbose_cardinal_sw: cardinal_sw,
-						verbose_cardinal_w: cardinal_w, verbose_cardinal_nw: cardinal_nw }
-
-cardinal_descriptions = { 	cardinal_n: verbose_cardinal_n, cardinal_ne: verbose_cardinal_ne,
-							cardinal_e: verbose_cardinal_e, cardinal_se: verbose_cardinal_se,
-							cardinal_s: verbose_cardinal_s, cardinal_sw: verbose_cardinal_sw,
-							cardinal_w: verbose_cardinal_w, cardinal_nw: verbose_cardinal_nw }
-
-unnamed_strings = [	"anonymous", "mysterious", "unnamed",
-					"nameless", "unidentified", "unknown" ]
-
 def ucfirst( word ):
 	return "%s%s" % ( word[:1].upper(), word[1:] )
 
@@ -76,36 +45,10 @@ def cardinal_for_bearing( bearing ):
 	elif( bearing < (step*8) ):
 		out = "n"	
 	return( out )	
-		
-	
-def description_for_way( way, is_title = False, definite_article = False ):
-	# print "description_for_way: %s" % way
-	tag = OSMUtilities.tag_for_data( way )
-	name = OSMUtilities.name_for_tag( tag )
-	if( name is None ):
-		if( DebugUtilities.get_debugmode() ):
-			print way
-		highway = "highway"
-		if( tag and OSMUtilities.key_highway in tag ):
-			highway = tag[ OSMUtilities.key_highway ]
-		if( is_title ):
-			u_str = choice( unnamed_strings )
-			name = "%s %s" % ( u_str, highway )
-		else: 
-			name = highway
-	
-		article = "the"
-		if( definite_article is False ):
-			article = indefinite_article( name )
-		name = "%s %s" % (article, name)
-		if( is_title ):
-			name = ucfirst( name )
-	
-	return( name )
 
 def get_neighbours( osm_connector, node, way ):
 	
-	result = osm_connector.WayGet( way[ OSMUtilities.key_id ] )
+	result = osm_connector.WayGet( way.get_id() )
 	nodelist = result[ OSMUtilities.key_nd ]
 	
 	# get ptr to current nd
@@ -141,3 +84,115 @@ def render_template( template_name ):
 	fh.close()
 	print txt
 	return( txt )
+
+def description_for_way( way, type_count = 0 ):
+	if( way.is_unnamed() ):
+		
+		highway_type = way.highway_type()
+		unnamed_str = choice( unnamed_strings )
+		
+		if( type_count > 1 ):
+			ordinal = ordinal_for_number( type_count )
+			highway_type = "%s %s" %  ( ordinal, highway_type )
+		
+		return( "%s %s" % ( unnamed_str, highway_type ) )
+		
+	return( way.get_name() )
+		
+
+# def description_for_way( way, is_title = False, definite_article = False ):
+	# print "description_for_way: %s" % way
+#	tag = way.tag
+#	name = way.get_name()
+#	if( name is None ):
+#		if( DebugUtilities.get_debugmode() ):
+#			print way
+#		highway = "highway"
+#		if( tag and OSMUtilities.key_highway in tag ):
+#			highway = tag[ OSMUtilities.key_highway ]
+#		if( is_title ):
+#			u_str = choice( unnamed_strings )
+#			name = "%s %s" % ( u_str, highway )
+#		else: 
+#			name = highway
+#	
+#		article = "the"
+#		if( definite_article is False ):
+#			article = indefinite_article( name )
+#		name = "%s %s" % (article, name)
+#		if( is_title ):
+#			name = ucfirst( name )
+#	
+#	return( name )
+
+def ordinal_for_number( num ):
+	if( num < 10 ):
+		return( one_ordinals[ num ] )
+	elif( num < 20 ):
+		return( teen_ordinals[ num-10 ] )
+	else:
+		tail = one_ordinals[ num%10 ]
+		head = ten_cardinals[ int(num/10) ]
+		return( "%s-%s" % ( tail, head ) )
+	return( none )
+
+class AdventureWay:
+	
+	def __init__( self, data_in ):
+		self.data = data_in
+		self.tag = OSMUtilities.tag_for_data( data_in )
+		self.name = None
+	
+	def get_id( self ):
+		return( self.data[ OSMUtilities.key_id ] )
+	
+	def get_name( self ):
+		if( self.name is None and self.tag ):
+			self.name = OSMUtilities.name_for_tag( self.tag )
+		return( self.name )
+	
+	def is_unnamed( self ):
+		return( self.get_name() is None )
+	
+	def highway_type( self ):
+		if( self.tag and OSMUtilities.key_highway in self.tag ):
+			return( self.tag[ OSMUtilities.key_highway ] )
+
+
+##
+# boring constants
+			
+cardinal_n = "n"
+cardinal_ne = "ne"
+cardinal_e = "e"
+cardinal_se = "se"
+cardinal_s = "s"
+cardinal_sw = "sw"
+cardinal_w = "w"
+cardinal_nw = "nw"
+
+verbose_cardinal_n = "north"
+verbose_cardinal_ne = "north-east"
+verbose_cardinal_e = "east"
+verbose_cardinal_se = "south-east"
+verbose_cardinal_s = "south"
+verbose_cardinal_sw = "south-west"
+verbose_cardinal_w = "west"
+verbose_cardinal_nw = "north-west"
+
+verbose_cardinals = { 	verbose_cardinal_n: cardinal_n, verbose_cardinal_ne: cardinal_ne,
+						verbose_cardinal_e: cardinal_e, verbose_cardinal_se: cardinal_se,
+						verbose_cardinal_s: cardinal_s, verbose_cardinal_sw: cardinal_sw,
+						verbose_cardinal_w: cardinal_w, verbose_cardinal_nw: cardinal_nw }
+
+cardinal_descriptions = { 	cardinal_n: verbose_cardinal_n, cardinal_ne: verbose_cardinal_ne,
+							cardinal_e: verbose_cardinal_e, cardinal_se: verbose_cardinal_se,
+							cardinal_s: verbose_cardinal_s, cardinal_sw: verbose_cardinal_sw,
+							cardinal_w: verbose_cardinal_w, cardinal_nw: verbose_cardinal_nw }
+
+unnamed_strings = [	"anonymous", "mysterious", "unnamed",
+					"nameless", "unidentified", "unknown" ]
+
+one_ordinals = [ "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth" ]
+teen_ordinals = [ "tenth", "eleventh", "twelfth", "thirteenth", "fourteenth", "fifteenth", "sixteenth", "seventeenth", "eighteenth", "nineteenth" ]
+ten_cardinals = [ "ten", "twenty", "thirty", "fourty", "fifty", "sixty", "seventy", "eighty", "ninety" ]

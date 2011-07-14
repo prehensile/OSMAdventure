@@ -24,40 +24,6 @@ def distance(lat1, lon1, lat2, lon2):
 	return distance * kmPerNauticalMile
 
 ###
-## from http://stackoverflow.com/questions/4913349/haversine-formula-in-python-bearing-and-distance-between-two-gps-points/4913653#4913653
-#
-	"""
-    Calculate the great circle distance between two points 
-    on the earth (specified in decimal degrees)
-	"""
-
-def haversine_bearing(lon1, lat1, lon2, lat2):
-	# print "haversine_bearing( %2.8f, %2.8f, %2.8f, %2.8f )" % ( lon1, lat1, lon2, lat2 )
-	# convert decimal degrees to radians 
-	lon1, lat1, lon2, lat2 = map(math.radians, [lon1, lat1, lon2, lat2])
-	# print "-> %2.8f, %2.8f, %2.8f, %2.8f" % ( lon1, lat1, lon2, lat2 )
-	# haversine formula 
-	dlon = lon2 - lon1 
-	dlat = lat2 - lat1 
-	a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
-	# print "-->%2.8f" % a
-	return a 
-
-def haversine_distance(lon1, lat1, lon2, lat2):
-    a = haversine_bearing(lon1, lat1, lon2, lat2)
-    c = 2 * math.atan2( math.sqrt(a), math.sqrt(1-a)) 
-    km = 6367 * c
-    return km 
-
-def williams_bearing( lat1, lon1, lat2, lon2 ):
-	lat1 = math.radians( lat1 )
-	lat2 = math.radians( lat2 )
-	dLon = math.radians(lon2-lon1)
-	y = math.sin(dLon) * math.cos(lat2)
-	x = math.cos(lat1)*math.sin(lat2) - math.sin(lat1)*math.cos(lat2)*math.cos(dLon)
-	return math.atan2( y, x );
-
-###
 ## from http://stackoverflow.com/questions/238260/how-to-calculate-the-bounding-box-for-a-given-lat-lng-location
 #
 

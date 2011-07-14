@@ -1,4 +1,5 @@
 import OSMUtilities
+from OSMUtilities import OSMNode
 import math
 import random
 import re
@@ -119,32 +120,6 @@ def join_list_verbose( items ):
 		i += 1
 	return( out )
 	
-
-# def description_for_way( way, is_title = False, definite_article = False ):
-	# print "description_for_way: %s" % way
-#	tag = way.tag
-#	name = way.get_name()
-#	if( name is None ):
-#		if( DebugUtilities.get_debugmode() ):
-#			print way
-#		highway = "highway"
-#		if( tag and OSMUtilities.key_highway in tag ):
-#			highway = tag[ OSMUtilities.key_highway ]
-#		if( is_title ):
-#			u_str = choice( unnamed_strings )
-#			name = "%s %s" % ( u_str, highway )
-#		else: 
-#			name = highway
-#	
-#		article = "the"
-#		if( definite_article is False ):
-#			article = indefinite_article( name )
-#		name = "%s %s" % (article, name)
-#		if( is_title ):
-#			name = ucfirst( name )
-#	
-#	return( name )
-
 def ordinal_for_number( num ):
 	if( num < 10 ):
 		return( one_ordinals[ num ] )
@@ -156,20 +131,7 @@ def ordinal_for_number( num ):
 		return( "%s-%s" % ( tail, head ) )
 	return( none )
 
-class AdventureWay:
-	
-	def __init__( self, data_in ):
-		self.data = data_in
-		self.tag = OSMUtilities.tag_for_data( data_in )
-		self.name = None
-	
-	def get_id( self ):
-		return( self.data[ OSMUtilities.key_id ] )
-	
-	def get_name( self ):
-		if( self.name is None and self.tag ):
-			self.name = OSMUtilities.name_for_tag( self.tag )
-		return( self.name )
+class AdventureWay( OSMNode ):
 	
 	def is_unnamed( self ):
 		return( self.get_name() is None )

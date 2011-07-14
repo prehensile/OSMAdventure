@@ -13,6 +13,7 @@ type_node = u'node'
 key_id = "id"
 key_nd = "nd"
 key_highway = "highway"
+key_amenity = u'amenity'
 
 geod = pyproj.Geod(ellps='clrk66')
 
@@ -26,11 +27,23 @@ def node_bearing( node1, node2 ):
 	lat2, lon2 = latlong_for_data( node2 )
 	# a = GeoUtilities.haversine_bearing( lon1, lat1, lon2, lat2 )
 	# a = GeoUtilities.williams_bearing( lat1, lon1, lat2, lon2 )
-	a = geod.inv( lon1, lat1, lon2, lat2, True )[0]
+	a = geod.inv( lon1, lat1, lon2, lat2 )[0]
 	a = (a+math.pi) % (math.pi*2) # normalise heading
 	# print "-->%2.8f" % a
 	# print "--->%2.8f" % math.degrees( a )
 	return( a )
+
+def node_distance( node1, node2 ):
+	lat1, lon1 = latlong_for_data( node1 )
+	lat2, lon2 = latlong_for_data( node2 )
+	d = geod.inv( lon1, lat1, lon2, lat2 )[2]
+	return( d )
+
+def type_for_item( data ):
+	type_out = None
+	if( key_type in data ):
+		type_out = data[ key_type ]
+	return type_out
 
 def data_for_item( item ):
 	data = None
@@ -54,6 +67,10 @@ def tag_for_data( data ):
 		tag = data[ key_tag ]
 	return( tag )
 
+def tag_for_item( item ):
+	data = data_for_item( item )
+	return tag_for_data( data )
+
 def name_for_tag( tag ):
 	name = None
 	if( tag and key_name in tag ):
@@ -71,7 +88,7 @@ def item_distance( item, lat, lon ):
 		item_lat, item_lon = latlong_for_data( data )
 		# d = GeoUtilities.distance( lat, lon, item_lat, item_lon )
 		# d = GeoUtilities.haversine_distance( lon, lat, item_lon, item_lat )
-		d = geod.inv( lon, lat, item_lon, item_lat, True )[2]
+		d = geod.inv( lon, lat, item_lon, item_lat )[2]
 	return( d )
 
 def sorted_items_by_distance( items_in, lat, long ):
@@ -129,3 +146,19 @@ def get_nearest_node_to_latlong( osm_connector, lat, long ):
 				break
 	
 	return current_node, current_way
+
+
+class OSMNode:
+	
+	def __init__( self, data_in ):
+		self.data = data_in
+		self.tag = tag_for_data( data_in )
+		self.name = None
+	
+	def get_id( self ):
+		return( self.data[ key_id ] )
+	
+	def get_name( self ):
+		if( self.name is None and self.tag ):
+			self.name = name_for_tag( self.tag )
+		return( self.name )

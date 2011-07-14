@@ -96,34 +96,30 @@ while( next_node ):
 		scratch_string = "%s %s" % ( AdventureUtilities.ucfirst( article ), scratch_string )
 	desc_out = "%s (%2.8f,%2.8f).\n" % ( scratch_string, lat, long )
 	desc_out += "You are standing"
-	names = ways_out.keys()
-	ln = len( names )
-	if( len( ways_out ) > 1 ):
-		desc_out += " at the junction of "	
-		i = 0
-		for name in names:
-			desc_out += name
-			if( i < ln-2 ):
-				desc_out += ", "
-			elif( i < ln-1 ):
-				desc_out += " and "
-			else:
-				desc_out += "."
-			i +=1
-	else:
-		desc_out += " on %s." %  AdventureUtilities.description_for_way( next_way )
+	desc_ways_out = ""
 	
 	# construct cardinal directions out & describe
-	desc_out += "\n"
 	bearing_next = -1
 	bearing_prev = -1
 	neighbour_prev = None
 	neighbour_next	 = None
 	directions_out = {}
+	names_out = []
+	names = ways_out.keys()
+	name_out = None
+	desc_name_out =  None
 	for name in names:
-		desc_out += "%s is to the " % name
+		
 		way_list = ways_out[ name ]
+		cardinal_list = []
+		name_out = name
+		desc_name_out = name
+		
 		for way in way_list:
+			
+			if( way.is_unnamed() ):
+				name_out = "The %s" % name
+				desc_name_out = "%s %s" % (AdventureUtilities.indefinite_article( name ), name )
 			
 			neighbour_prev, neighbour_next = AdventureUtilities.get_neighbours( osm_connector, next_node, way )
 			
@@ -131,21 +127,28 @@ while( next_node ):
 				bearing_next = OSMUtilities.node_bearing( next_node, neighbour_next )
 				cardinal_next = AdventureUtilities.cardinal_for_bearing( bearing_next )
 				directions_out[ cardinal_next ] = ( neighbour_next, way )
-				desc_out += AdventureUtilities.description_for_cardinal( cardinal_next )
-				if( neighbour_next ):
-					desc_out += " and "
+				cardinal_list.append( AdventureUtilities.cardinal_descriptions[ cardinal_next ] )
 			
 			if( neighbour_prev ):
-				neighbour_prev = OSMUtilities.node_bearing( next_node, neighbour_prev )
+				bearing_prev = OSMUtilities.node_bearing( next_node, neighbour_prev )
 				cardinal_prev = AdventureUtilities.cardinal_for_bearing( bearing_prev )
 				directions_out[ cardinal_prev ] = ( neighbour_prev, way )
-				desc_out += AdventureUtilities.description_for_cardinal( cardinal_prev )
+				cardinal_list.append( AdventureUtilities.cardinal_descriptions[ cardinal_prev ] )
+				
+		desc_ways_out += "%s %s to the %s.\n" % ( name_out, 
+			AdventureUtilities.present_simple( name_out ),
+			AdventureUtilities.join_list_verbose( cardinal_list ) )
+		names_out.append( desc_name_out )
 		
-		desc_out += ". "
-			
-	
 	# display description
+	if( len( names_out ) > 1 ):
+		desc_out += " at the junction of %s." % AdventureUtilities.join_list_verbose( names_out )
+	else:
+		desc_out += " on %s." %  AdventureUtilities.description_for_way( next_way )
 	print desc_out
+	print desc_ways_out
+	
+	# print directions_out
 	
 	# input mode go!
 	mode_input = True

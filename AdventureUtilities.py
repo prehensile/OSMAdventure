@@ -17,6 +17,11 @@ def indefinite_article( noun ):
 	else:
 		return "a"
 
+def present_simple( noun ):
+	if( noun[-1:].lower() == "s" ):
+		return "are"
+	return "is"
+
 def description_for_cardinal( cardinal ):
 	return(  cardinal_descriptions[ cardinal ] )
 	
@@ -85,6 +90,7 @@ def render_template( template_name ):
 	print txt
 	return( txt )
 
+
 def description_for_way( way, type_count = 0 ):
 	if( way.is_unnamed() ):
 		
@@ -98,7 +104,21 @@ def description_for_way( way, type_count = 0 ):
 		return( "%s %s" % ( unnamed_str, highway_type ) )
 		
 	return( way.get_name() )
-		
+
+
+def join_list_verbose( items ):
+	out = ""
+	ln = len( items )
+	i = 0
+	for item in items:
+		out += item
+		if( i < ln-2 ):
+			out += ", "
+		elif( i < ln-1 ):
+			out += " and "
+		i += 1
+	return( out )
+	
 
 # def description_for_way( way, is_title = False, definite_article = False ):
 	# print "description_for_way: %s" % way

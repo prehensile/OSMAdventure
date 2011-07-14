@@ -9,6 +9,7 @@ from sets import Set
 from DebugUtilities import DebugUtilities
 from AdventureUtilities import AdventureWay
 import pyproj
+import socket
 
 def parse_way_out( fragment, ways_out ):
 	out = None
@@ -73,15 +74,16 @@ def get_features( connector, node_in, way_in ):
 	
 	# expand outwards to neighbours
 	for neighbour in neighbours:
-		nlat, nlon = OSMUtilities.latlong_for_data( neighbour )
-		if( nlat > lat_top ):
-			lat_top = nlat
-		elif( nlat < lat_bottom ):
-			lat_bottom = nlat
-		if( nlon > lon_right ):
-			lon_right = nlon
-		elif( nlon < lon_left ):
-			lon_left = nlon
+		if( neighbour ):
+			nlat, nlon = OSMUtilities.latlong_for_data( neighbour )
+			if( nlat > lat_top ):
+				lat_top = nlat
+			elif( nlat < lat_bottom ):
+				lat_bottom = nlat
+			if( nlon > lon_right ):
+				lon_right = nlon
+			elif( nlon < lon_left ):
+				lon_left = nlon
 	
 	# balance width & height so we end up with a square
 	geod = pyproj.Geod(ellps='clrk66')
@@ -120,14 +122,19 @@ def get_features( connector, node_in, way_in ):
 # long = -0.157
 
 # rushmore road
-lat = 51.55464
-long = -0.05068
+# lat = 51.55464
+# long = -0.05068
 
 # dynamic lat / long
-# ipinfo = IPInfoDB.get_info( "31.64.140.162" )
+# ipinfo = IPInfoDB.get_info( "217.47.200.186" )
+# print ipinfo
 # lat = float( ipinfo[8] )
 # long = float( ipinfo[9] )
 # print( ipinfo[6] )
+
+# rio de janerio
+lat = -22.905392
+long = -43.177128
 
 osm_connector = OsmApi.OsmApi()
 next_node, next_way_data = OSMUtilities.get_nearest_node_to_latlong( osm_connector, lat, long )
@@ -253,6 +260,7 @@ while( next_node ):
 					AdventureUtilities.render_template( "teleport_in" )
 					next_node, next_way = OSMUtilities.get_nearest_node_to_latlong( osm_connector, tlat, tlon )
 					if( next_node and next_way ):
+						next_way = AdventureWay( next_way )
 						mode_input = False
 					else:
 						AdventureUtilities.render_template( "teleport_error" )

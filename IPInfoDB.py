@@ -14,6 +14,7 @@ def get_info( ip ):
 		except : passdict["ip"] = ip
 	urldata = urllib.urlencode(passdict)
 	url = api_url + "?" + urldata
+	print url
 	urlobj = urllib2.urlopen(url)
 	data = urlobj.read()
 	urlobj.close()

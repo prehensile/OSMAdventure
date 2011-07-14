@@ -1,6 +1,6 @@
 class DebugUtilities:
 	
-	_debugmode = False
+	_debugmode = None
 	@staticmethod
 	def get_debugmode():
 		return( DebugUtilities._debugmode )
